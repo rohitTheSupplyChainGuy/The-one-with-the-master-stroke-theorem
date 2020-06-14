@@ -10,3 +10,4 @@ c. The estimated mean approaches population mean with the increase in sample siz
 Description of the files:
 Central-Limit-Theorem.Rmd - R markdown file that contains the source code of the project
 Output images folder: This is where the output of the R-code is stored. One can quickly skim through these files to get a hang of what the project is trying to do.
+diabetic_data.csv: Dataset on which the project is based.
