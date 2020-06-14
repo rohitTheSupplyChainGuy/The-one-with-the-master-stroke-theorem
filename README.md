@@ -6,3 +6,5 @@ Focus is laid to re-assert the below:
 a. Regardless of the shape of the population distribution, sampling distribution of the sample means attains a normal distribution if sample size is sufficiently large (preferably >= 30).
 b. The variance of the sampling distribution decreases with the increase in sample size.
 c. The estimated mean approaches population mean with the increase in sample size.
+
+Description of the files:
