@@ -12,7 +12,7 @@ options(digits = 3)
 ```
 
 
-#Reading the hospital datasheet
+#Reading the hospital dataset
 ```{r Reading the .csv file from home directory}
 hospitalData <- read.csv("C:/Users/rohit/Downloads/diabetic_data.csv", header = TRUE)
 dim(hospitalData)
@@ -38,7 +38,7 @@ timeDist + geom_vline(hospitalData.dt, xintercept =mean(hospitalData.dt$time_in_
           xlab("Days in hospital") + ylab("Number of patients")
 
 ```
-#Insight corner: Most patients are discharged in less than 5 days, the distributed is right-skewed
+#Insight corner: Most patients are discharged in less than 5 days, the distributed is right-skewed with an average of 4.4 days per patient
 
 #Taking 1000 samples of size 2,10,20 and 40 from the population
 ```{r}
