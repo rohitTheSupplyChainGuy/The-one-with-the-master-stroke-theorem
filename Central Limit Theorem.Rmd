@@ -1,5 +1,5 @@
 ---
-title: "Central Limit Theorem - P1"
+title: "Central Limit Theorem"
 author: "Rohit Tolawat"
 date: "6/12/2020"
 output: html_document
