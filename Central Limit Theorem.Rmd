@@ -27,17 +27,25 @@ head(hospitalData)
 hospitalData.dt <- setDT(hospitalData)
 #Checking if there are any NA rows in the column
 sum(is.na(hospitalData.dt$time_in_hospital))
+sqrt(var(hospitalData.dt$time_in_hospital))
 ```
 
 #Checking the distribution of the population and the mean days spent by a patient in hospital
 ```{r}
 timeDist <-  ggplot(hospitalData.dt, aes(x=hospitalData.dt$time_in_hospital)) +
               geom_histogram(color = "black", fill = "white", binwidth = 1) 
-timeDist + geom_vline(hospitalData.dt, xintercept =mean(hospitalData.dt$time_in_hospital), color = "red", linetype = "dashed")   + 
+timeDist + geom_vline(xintercept =mean(hospitalData.dt$time_in_hospital), color = "red", linetype = "dashed")   + 
           ggtitle("Distribution of days in hospital(Dashed line = Population mean)") +
           xlab("Days in hospital") + ylab("Number of patients")
 
 ```
+
+```{r}
+mean(hospitalData.dt$time_in_hospital)
+sqrt(var(hospitalData.dt$time_in_hospital))
+```
+
+
 #Insight corner: Most patients are discharged in less than 5 days, the distributed is right-skewed with an average of 4.4 days per patient
 
 #Taking 1000 samples of size 2,10,20 and 40 from the population
@@ -64,20 +72,58 @@ hist(sampleMeanSize20,main = "1000 samples of 20", xlab = "Days in hospital" )
 abline(v=mean(sampleMeanSize20), col = "red")
 hist(sampleMeanSize40,main = "1000 samples of 40", xlab = "Days in hospital" )
 abline(v=mean(sampleMeanSize40), col = "red")
+
 ```
+#The Q-Q plot can be used to check if the data points form a normal distribution
+
+```{r}
+qqnorm(sampleMeanSize40)
+```
+
+
+```{r}
+Mu <- mean(sampleMeanSize40)
+err <- sqrt(var(sampleMeanSize40)) / sqrt(40)
+sigmaBar <- sqrt(var(sampleMeanSize40))
+sigmaPop <- sqrt(var(sampleMeanSize40))*sqrt(40)
+cumulative.prob <- 0
+daysInHospital <- 0
+j <- 0
+for (i in seq(0,20,0.001)){
+  if(i == min(sampleMeanSize40))
+    j = 1  
+  else
+    j = j + 1
+  
+  cumulative.prob[j] <- pnorm(i, mean = Mu,  sd = sigmaPop, lower.tail = TRUE)
+  daysInHospital[j] <-  i 
+}
+cumulative.dt <- data.table(var1 = cumulative.prob*100, var2 = daysInHospital)
+
+ggplot(cumulative.dt, aes(y=var1, x=var2))+
+  geom_line()+
+  xlab("Days in hospital")+
+  ylab("Proportion of patients treated in %")+
+  ggtitle("Cumulative probability distribution plot from population parameters")
+  #geom_hline(yintercept = 0.5, linetype = "dashed", color = "red")
+
+```
+
 #Insight corner: Sampling distribution of sample means attains normal distriburion as sample size increases 
 ```{r}
 sample_size <- c(2,10,20,40)
 sample_mean <- c(mean(sampleMeanSize2),mean(sampleMeanSize10),mean(sampleMeanSize20),mean(sampleMeanSize40))
-sample_sd   <- c(sd(sampleMeanSize2),sd(sampleMeanSize10),sd(sampleMeanSize20),sd(sampleMeanSize40))
+sample_sd   <- c(sd(sampleMeanSize2) ,sd(sampleMeanSize10),sd(sampleMeanSize20),sd(sampleMeanSize40))
 result.dt <- data.table(sample_size,sample_mean,sample_sd)
+names(result.dt) <- c("Sample size", "Sample mean", "Sample SD")
 result.dt
 ```
 
 #Plotting standard deviation against sample size
 ```{r}
-ggplot(result.dt, aes(x=result.dt$sample_size, y=result.dt$sample_sd)) +
+ggplot(result.dt, aes(x=result.dt$`Sample size`, y=result.dt$`Sample SD`)) +
               geom_line() +
+              geom_point(size = 3)+
 ggtitle("Variation in the estimate decreases as sample size increases") +
 xlab("Sample size") + ylab("Standard deviation")
 
@@ -85,11 +131,84 @@ xlab("Sample size") + ylab("Standard deviation")
 
 #Plotting estimate of the mean against sample size
 ```{r}
-ggplot(result.dt, aes(x=result.dt$sample_size, y=result.dt$sample_mean)) +
+ggplot(result.dt, aes(x=result.dt$`Sample size`, y=result.dt$`Sample mean`)) +
               geom_line() +
-geom_hline(hospitalData.dt, yintercept =mean(hospitalData.dt$time_in_hospital),color = "red", linetype = "dashed")   +    
+              geom_point(size = 3)+
+geom_hline(yintercept =mean(hospitalData.dt$time_in_hospital),color = "red", linetype = "dashed")   +    
 ggtitle("As sample size increases, estimate inches closer to population mean") +
 xlab("Sample size") + ylab("Estimate mean of population")
 
 ```
+```{r}
+controlChartSampleMean <- 0
+controlChartSD <- 0
+
+twoSigmaBar = 2*sigmaBar
+threeSigmaBar = 3*sigmaBar 
+  
+for(i in 1:40){
+  sampleDrawn <- sample(hospitalData.dt$time_in_hospital,size = 10, replace = TRUE)
+  controlChartSampleMean[i] <- mean(sampleDrawn)
+  controlChartSD[i] <- sqrt(var(sampleDrawn))
+}
+
+controlChartData.dt <- data.table(var1 = 1:40, var2=controlChartSampleMean, var3=controlChartSD)
+
+MuBarBar <- mean(controlChartSampleMean)
+
+plot1 <- ggplot(controlChartData.dt, aes(y=controlChartData.dt$var2, x=controlChartData.dt$var1))+
+  geom_line(size=0.5)+
+  geom_point(size=3)+
+  geom_hline(yintercept = MuBarBar, linetype = "dashed", color = "Blue", size=0.5)+
+  geom_hline(yintercept = (MuBarBar + sigmaBar), linetype = "dashed", color = "green",size=0.5)+
+  geom_hline(yintercept = (MuBarBar - sigmaBar), linetype = "dashed", color = "green",size=0.5)+
+  geom_hline(yintercept = (MuBarBar + twoSigmaBar), linetype = "dashed", color = "yellow",size=0.5)+
+  geom_hline(yintercept = (MuBarBar - twoSigmaBar), linetype = "dashed", color = "yellow",size=0.5)+  
+  geom_hline(yintercept = (MuBarBar + threeSigmaBar), linetype = "dashed", color = "red",size=0.5)+
+  geom_hline(yintercept = (MuBarBar - threeSigmaBar), linetype = "dashed", color = "red",size=0.5)+  
+  xlab("Subgroup sample number")+
+  ylab("Subgroup sample mean")+
+  ggtitle("Monitoring chart for subgroup sample mean")
+
+plot2 <- ggplot(controlChartData.dt, aes(x=controlChartData.dt$var1, y=controlChartData.dt$var3))+
+ geom_line()+
+ geom_point(size=3)+
+ geom_hline(yintercept = mean(controlChartData.dt$var3), linetype="dashed", color = "Blue", size=1)+
+ geom_hline(yintercept = 1.716 * mean(controlChartData.dt$var3), linetype="dashed", color = "red", size=0.5)+
+ geom_hline(yintercept = 0.284 * mean(controlChartData.dt$var3), linetype="dashed", color = "red", size=0.5)+
+ ggtitle("Monitoring Chart for subgroup standard deviation")+
+ xlab("Subgroup sample number")+
+ ylab("Standard deviation")  
+  
+plot1
+plot2
+
+     
+```
+
+
+```{r}
+
+seg1 <- sum(controlChartData.dt[,var2>=(MuBarBar-sigmaBar) & var2<=(MuBarBar+sigmaBar)])
+seg2 <- sum(controlChartData.dt[,var2>=(MuBarBar-twoSigmaBar) & var2<=(MuBarBar+twoSigmaBar)])
+seg3 <- sum(controlChartData.dt[,var2>=(MuBarBar-threeSigmaBar) & var2<=(MuBarBar+threeSigmaBar)])
+seg4 <- nrow(controlChartData.dt) - seg3
+
+segmentName <- c("Within 1 sigma", "Within 2 Sigma", "Within 3 Sigma", "Beyond Control Limits") 
+controlTable.dt <- data.table(var1=segmentName, var2=c(seg1,seg2,seg3,seg4), var3=c(seg1/40*100,seg2/40*100,seg3/40*100,seg4/40*100))
+names(controlTable.dt) <- c("Sigma limits","Subgroup mean within limits","Percentage points within limits")
+controlTable.dt
+```
+
+```{r}
+mean(controlChartData.dt$var2)
+mean(controlChartData.dt$var3)
+ttest <-  t.test(controlChartData.dt$var2, mu = Mu)
+
+ttest
+ttest$p.value
+
+```
+
+
 
